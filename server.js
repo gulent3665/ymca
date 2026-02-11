@@ -80,6 +80,13 @@ io.on("connection", (socket) => {
     io.emit("chat message", msg);
   });
 });
+app.get("/", (req, res) => {
+  if (req.session.user) {
+    res.redirect("/chat");
+  } else {
+    res.redirect("/login.html");
+  }
+});
 
 server.listen(PORT, () => {
   console.log("Server running");
