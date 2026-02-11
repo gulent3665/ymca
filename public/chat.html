@@ -21,19 +21,30 @@ const socket = io();
 const input = document.getElementById("input");
 const messages = document.getElementById("messages");
 
+// We'll pass the username from server using a global variable
+// For now, we assume server injects it in the page
+const username = window.USERNAME || "Unknown";
+
 function send() {
   if (input.value !== "") {
-    socket.emit("chat message", input.value);
+    // Send an object instead of plain string
+    socket.emit("chat message", {
+      user: username,
+      text: input.value
+    });
     input.value = "";
   }
 }
 
+// Listen for messages
 socket.on("chat message", (msg) => {
   const li = document.createElement("li");
-  li.textContent = ">> " + msg;
+  li.textContent = msg.user + " >> " + msg.text;
   messages.appendChild(li);
 });
 </script>
 
+
 </body>
 </html>
+
