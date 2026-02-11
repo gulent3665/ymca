@@ -1,9 +1,19 @@
-<h2>Chat Room</h2>
-<a href="/logout">Logout</a>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Resilience Terminal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-<ul id="messages"></ul>
-<input id="input" autocomplete="off" />
-<button onclick="send()">Send</button>
+<h1 class="glow">RESILIENCE TERMINAL</h1>
+<a href="/logout" style="color:#ff4d4d;">Disconnect</a>
+
+<div class="container">
+  <ul id="messages"></ul>
+  <input id="input" autocomplete="off" placeholder="Type message..." />
+  <button onclick="send()">Transmit</button>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -20,7 +30,10 @@ function send() {
 
 socket.on("chat message", (msg) => {
   const li = document.createElement("li");
-  li.textContent = msg;
+  li.textContent = ">> " + msg;
   messages.appendChild(li);
 });
 </script>
+
+</body>
+</html>
