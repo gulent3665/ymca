@@ -1,0 +1,26 @@
+<h2>Chat Room</h2>
+<a href="/logout">Logout</a>
+
+<ul id="messages"></ul>
+<input id="input" autocomplete="off" />
+<button onclick="send()">Send</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const input = document.getElementById("input");
+const messages = document.getElementById("messages");
+
+function send() {
+  if (input.value !== "") {
+    socket.emit("chat message", input.value);
+    input.value = "";
+  }
+}
+
+socket.on("chat message", (msg) => {
+  const li = document.createElement("li");
+  li.textContent = msg;
+  messages.appendChild(li);
+});
+</script>
