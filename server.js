@@ -10,6 +10,16 @@ const multer = require("multer");
 const { Dropbox } = require("dropbox");
 const fetch = require("node-fetch");
 
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+const PORT = process.env.PORT || 3000;
+
+/* ===============================
+   Dropbox + Upload Setup
+=================================*/
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 const dbx = new Dropbox({
@@ -17,54 +27,50 @@ const dbx = new Dropbox({
   fetch: fetch
 });
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+/* ===============================
+   MongoDB Connection
+=================================*/
 
-const PORT = process.env.PORT || 3000;
-
-// MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log(err));
 
-// User model
+/* ===============================
+   Models
+=================================*/
+
 const User = mongoose.model("User", {
   username: String,
-  password: String
+  password: String,
+  avatar: String,
+  profileComplete: { type: Boolean, default: false }
 });
 
-// Message model
 const Message = mongoose.model("Message", {
   user: String,
   text: String,
   timestamp: { type: Date, default: Date.now }
 });
 
+/* ===============================
+   Middleware
+=================================*/
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
-// Step 1: Create session middleware variable
 const sessionMiddleware = session({
   secret: "supersecretkey",
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-  cookie: { maxAge: 1000 * 60 * 60 } // 1 hour
+  cookie: { maxAge: 1000 * 60 * 60 }
 });
 
-// Step 2: Use session in Express
 app.use(sessionMiddleware);
-
-// Step 3: Share session with Socket.io
 io.use(sharedsession(sessionMiddleware, { autoSave: true }));
 
-
-app.use(sessionMiddleware);
-
-// Middleware to protect chat
 function auth(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/login.html");
@@ -72,14 +78,18 @@ function auth(req, res, next) {
   next();
 }
 
-// Routes
+/* ===============================
+   Auth Routes
+=================================*/
 
 app.post("/register", async (req, res) => {
   const hashed = await bcrypt.hash(req.body.password, 10);
+
   await User.create({
     username: req.body.username,
     password: hashed
   });
+
   res.redirect("/login.html");
 });
 
@@ -91,11 +101,12 @@ app.post("/login", async (req, res) => {
   if (!valid) return res.send("Wrong password");
 
   req.session.user = user.username;
-  res.redirect("/chat.html");
-});
 
-app.get("/chat", auth, (req, res) => {
-  res.sendFile(__dirname + "/public/chat.html");
+  if (!user.profileComplete) {
+    return res.redirect("/profile");
+  }
+
+  res.redirect("/chat");
 });
 
 app.get("/logout", (req, res) => {
@@ -103,20 +114,51 @@ app.get("/logout", (req, res) => {
   res.redirect("/login.html");
 });
 
-// Socket.io
-io.on("connection", (socket) => {
-  const user = socket.handshake.session.user || "Unknown";
+/* ===============================
+   Profile Setup
+=================================*/
 
-  // Send all previous messages to the user
-  Message.find().sort({ timestamp: 1 }).then((msgs) => {
-    msgs.forEach((msg) => socket.emit("chat message", msg));
-  });
+app.get("/profile", auth, (req, res) => {
+  res.sendFile(__dirname + "/public/profile.html");
+});
 
-  // Listen for new messages
-  socket.on("chat message", async (msgText) => {
-    const msg = await Message.create({ user: user, text: msgText });
-    io.emit("chat message", msg); // broadcast to everyone
-  });
+app.post("/upload-profile", auth, upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).send("No file");
+
+    const dropboxPath = `/avatars/${req.session.user}.png`;
+
+    await dbx.filesUpload({
+      path: dropboxPath,
+      contents: req.file.buffer,
+      mode: { ".tag": "overwrite" }
+    });
+
+    const link = await dbx.sharingCreateSharedLinkWithSettings({
+      path: dropboxPath
+    });
+
+    const url = link.result.url.replace("?dl=0", "?raw=1");
+
+    await User.updateOne(
+      { username: req.session.user },
+      { avatar: url, profileComplete: true }
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Upload failed");
+  }
+});
+
+/* ===============================
+   Chat Routes
+=================================*/
+
+app.get("/chat", auth, (req, res) => {
+  res.sendFile(__dirname + "/public/chat.html");
 });
 
 app.get("/", (req, res) => {
@@ -126,6 +168,46 @@ app.get("/", (req, res) => {
     res.redirect("/login.html");
   }
 });
+
+/* ===============================
+   Socket.io
+=================================*/
+
+io.on("connection", (socket) => {
+  const user = socket.handshake.session.user || "Unknown";
+
+  // Send previous messages
+  Message.find().sort({ timestamp: 1 }).then(async (msgs) => {
+    for (let msg of msgs) {
+      const userData = await User.findOne({ username: msg.user });
+
+      socket.emit("chat message", {
+        user: msg.user,
+        text: msg.text,
+        avatar: userData?.avatar || null
+      });
+    }
+  });
+
+  socket.on("chat message", async (msgText) => {
+    const userData = await User.findOne({ username: user });
+
+    const msg = await Message.create({
+      user: user,
+      text: msgText
+    });
+
+    io.emit("chat message", {
+      user: msg.user,
+      text: msg.text,
+      avatar: userData?.avatar || null
+    });
+  });
+});
+
+/* ===============================
+   Start Server
+=================================*/
 
 server.listen(PORT, () => {
   console.log("Server running");
