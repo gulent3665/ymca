@@ -1,6 +1,10 @@
 /* Import hacker font */
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -88,4 +92,76 @@ button:hover {
 
 #messages::-webkit-scrollbar-thumb {
   background: #ff1a1a;
+}
+
+/* ============================= */
+/* PROFILE BADGE / UPLOAD SYSTEM */
+/* ============================= */
+
+.badge-frame {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 20px auto;
+}
+
+.frame {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.preview {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  border-radius: 6px;
+}
+
+.plus {
+  position: absolute;
+  z-index: 3;
+  font-size: 50px;
+  color: #ff1a1a;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-shadow: 0 0 10px #ff0000;
+  cursor: pointer;
+}
+
+.plus:hover {
+  color: white;
+  text-shadow: 0 0 20px #ff0000;
+}
+
+/* Popup overlay */
+.popup {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup-content {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  background: black;
+  border: 1px solid #ff1a1a;
+  box-shadow: 0 0 20px #ff0000;
+}
+
+#popupAvatar {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
