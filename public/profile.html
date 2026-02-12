@@ -3,6 +3,9 @@
 <head>
   <title>Setup Profile</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- Cropper CSS MUST be in head -->
+  <link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css"/>
 </head>
 <body>
 
@@ -13,31 +16,43 @@
   <div class="badge-frame">
     <img src="badge.png" class="frame">
     <img id="preview" class="preview">
-    <div class="plus">+</div>
   </div>
 </div>
 
 <input type="file" id="imageInput">
 <button onclick="saveProfile()">Save Profile</button>
 
+<!-- Cropper JS at bottom -->
 <script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css"/>
 
 <script>
 let cropper;
-
 const input = document.getElementById("imageInput");
 const preview = document.getElementById("preview");
 
 input.addEventListener("change", (e) => {
   const file = e.target.files[0];
+  if (!file) return;
+
   const reader = new FileReader();
 
   reader.onload = function() {
     preview.src = reader.result;
+
+    // Destroy old cropper if exists
+    if (cropper) {
+      cropper.destroy();
+    }
+
     cropper = new Cropper(preview, {
       aspectRatio: 1,
-      viewMode: 1
+      viewMode: 1,
+      dragMode: "move",
+      autoCropArea: 1,
+      background: false,
+      zoomable: true,
+      scalable: false,
+      movable: true
     });
   };
 
@@ -45,9 +60,14 @@ input.addEventListener("change", (e) => {
 });
 
 async function saveProfile() {
+  if (!cropper) {
+    alert("Select an image first.");
+    return;
+  }
+
   const canvas = cropper.getCroppedCanvas({
-    width: 300,
-    height: 300
+    width: 400,
+    height: 400
   });
 
   const blob = await new Promise(resolve =>
@@ -57,12 +77,16 @@ async function saveProfile() {
   const formData = new FormData();
   formData.append("image", blob);
 
-  await fetch("/upload-profile", {
+  const res = await fetch("/upload-profile", {
     method: "POST",
     body: formData
   });
 
-  window.location.href = "/chat";
+  if (res.ok) {
+    window.location.href = "/chat";
+  } else {
+    alert("Upload failed");
+  }
 }
 </script>
 
