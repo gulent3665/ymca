@@ -98,45 +98,31 @@ button:hover {
 /* PROFILE BADGE / UPLOAD SYSTEM */
 /* ============================= */
 
+/* Cropping container */
 .badge-frame {
   position: relative;
   width: 300px;
   height: 300px;
   margin: 20px auto;
+  overflow: hidden;
+  border: 1px solid #ff1a1a;
+  box-shadow: 0 0 20px #ff0000;
+  background: black;
 }
 
+/* IMPORTANT: Let Cropper control image */
+.preview {
+  max-width: 100%;
+  display: block;
+}
+
+/* Frame overlay (used in popup display only) */
 .frame {
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: 2;
+  z-index: 5;
   pointer-events: none;
-}
-
-.preview {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
-  border-radius: 6px;
-}
-
-.plus {
-  position: absolute;
-  z-index: 3;
-  font-size: 50px;
-  color: #ff1a1a;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-shadow: 0 0 10px #ff0000;
-  cursor: pointer;
-}
-
-.plus:hover {
-  color: white;
-  text-shadow: 0 0 20px #ff0000;
 }
 
 /* Popup overlay */
