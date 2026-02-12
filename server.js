@@ -28,13 +28,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
-app.use(session({
+// Step 1: Create session middleware variable
+const sessionMiddleware = session({
   secret: "supersecretkey",
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-  cookie: { maxAge: 1000 * 60 * 60 }
-}));
+  cookie: { maxAge: 1000 * 60 * 60 } // 1 hour
+});
+
+// Step 2: Use session in Express
+app.use(sessionMiddleware);
+
+// Step 3: Share session with Socket.io
+io.use(sharedsession(sessionMiddleware, { autoSave: true }));
+
+
+app.use(sessionMiddleware);
 
 // Middleware to protect chat
 function auth(req, res, next) {
@@ -77,10 +87,16 @@ app.get("/logout", (req, res) => {
 
 // Socket.io
 io.on("connection", (socket) => {
+  const user = socket.handshake.session.user || "Unknown";
+
   socket.on("chat message", (msg) => {
-    io.emit("chat message", msg);
+    io.emit("chat message", {
+      user: user,
+      text: msg
+    });
   });
 });
+
 app.get("/", (req, res) => {
   if (req.session.user) {
     res.redirect("/chat");
