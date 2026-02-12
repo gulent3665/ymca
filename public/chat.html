@@ -8,6 +8,8 @@
 
 <h1 class="glow">RESILIENCE TERMINAL</h1>
 <a href="/logout" style="color:#ff4d4d;">Disconnect</a>
+<input type="file" id="fileInput" />
+<button onclick="uploadImage()">Upload Image</button>
 
 <div class="container">
   <ul id="messages"></ul>
@@ -23,18 +25,50 @@ const messages = document.getElementById("messages");
 
 function send() {
   if (input.value !== "") {
-    socket.emit("chat message", input.value); // just send the text
+    socket.emit("chat message", input.value);
     input.value = "";
   }
+}
+
+// 🔥 ADD THIS FUNCTION
+async function uploadImage() {
+  const fileInput = document.getElementById("fileInput");
+  const file = fileInput.files[0];
+
+  if (!file) return alert("Select a file");
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch("/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  socket.emit("chat message", "[IMAGE]" + data.imageUrl);
 }
 
 // Listen for messages
 socket.on("chat message", (msg) => {
   const li = document.createElement("li");
-  li.textContent = msg.user + " >> " + msg.text; // use .text
+
+  if (msg.text.startsWith("[IMAGE]")) {
+    const img = document.createElement("img");
+    img.src = msg.text.replace("[IMAGE]", "");
+    img.style.maxWidth = "150px";
+
+    li.textContent = msg.user + " >> ";
+    li.appendChild(img);
+  } else {
+    li.textContent = msg.user + " >> " + msg.text;
+  }
+
   messages.appendChild(li);
 });
 </script>
+
 
 
 </body>
