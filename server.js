@@ -6,6 +6,16 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const { Server } = require("socket.io");
+const multer = require("multer");
+const { Dropbox } = require("dropbox");
+const fetch = require("node-fetch");
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+const dbx = new Dropbox({
+  accessToken: process.env.DROPBOX_TOKEN,
+  fetch: fetch
+});
 
 const app = express();
 const server = http.createServer(app);
