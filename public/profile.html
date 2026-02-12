@@ -35,10 +35,11 @@ input.addEventListener("change", (e) => {
 
   const reader = new FileReader();
 
-  reader.onload = function() {
-    preview.src = reader.result;
+reader.onload = function() {
+  preview.src = reader.result;
 
-    // Destroy old cropper if exists
+  preview.onload = function () {
+
     if (cropper) {
       cropper.destroy();
     }
@@ -53,7 +54,10 @@ input.addEventListener("change", (e) => {
       scalable: false,
       movable: true
     });
+
   };
+};
+
 
   reader.readAsDataURL(file);
 });
@@ -91,4 +95,3 @@ async function saveProfile() {
 
 </body>
 </html>
-
