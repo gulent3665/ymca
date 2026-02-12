@@ -112,7 +112,9 @@ button:hover {
 
 /* IMPORTANT: Let Cropper control image */
 .preview {
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -123,6 +125,10 @@ button:hover {
   height: 100%;
   z-index: 5;
   pointer-events: none;
+}
+.badge-frame .cropper-container {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Popup overlay */
