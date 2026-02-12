@@ -24,6 +24,14 @@ const User = mongoose.model("User", {
   password: String
 });
 
+// Message model
+const Message = mongoose.model("Message", {
+  user: String,
+  text: String,
+  timestamp: { type: Date, default: Date.now }
+});
+
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
@@ -89,11 +97,15 @@ app.get("/logout", (req, res) => {
 io.on("connection", (socket) => {
   const user = socket.handshake.session.user || "Unknown";
 
-  socket.on("chat message", (msg) => {
-    io.emit("chat message", {
-      user: user,
-      text: msg
-    });
+  // Send all previous messages to the user
+  Message.find().sort({ timestamp: 1 }).then((msgs) => {
+    msgs.forEach((msg) => socket.emit("chat message", msg));
+  });
+
+  // Listen for new messages
+  socket.on("chat message", async (msgText) => {
+    const msg = await Message.create({ user: user, text: msgText });
+    io.emit("chat message", msg); // broadcast to everyone
   });
 });
 
