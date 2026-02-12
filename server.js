@@ -128,15 +128,29 @@ app.post("/upload-profile", auth, upload.single("image"), async (req, res) => {
 
     const dropboxPath = `/avatars/${req.session.user}.png`;
 
+    // Upload or overwrite file
     await dbx.filesUpload({
       path: dropboxPath,
       contents: req.file.buffer,
       mode: { ".tag": "overwrite" }
     });
 
-    const link = await dbx.sharingCreateSharedLinkWithSettings({
-      path: dropboxPath
-    });
+    let link;
+
+    try {
+      // Try creating new shared link
+      link = await dbx.sharingCreateSharedLinkWithSettings({
+        path: dropboxPath
+      });
+    } catch (err) {
+      // If link already exists, get existing one
+      const existing = await dbx.sharingListSharedLinks({
+        path: dropboxPath,
+        direct_only: true
+      });
+
+      link = { result: existing.result.links[0] };
+    }
 
     const url = link.result.url.replace("?dl=0", "?raw=1");
 
@@ -148,10 +162,11 @@ app.post("/upload-profile", auth, upload.single("image"), async (req, res) => {
     res.json({ success: true });
 
   } catch (err) {
-    console.error(err);
+    console.error("UPLOAD ERROR:", err);
     res.status(500).send("Upload failed");
   }
 });
+
 
 /* ===============================
    Chat Routes
@@ -212,3 +227,4 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log("Server running");
 });
+
