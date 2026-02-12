@@ -23,8 +23,7 @@ const PORT = process.env.PORT || 3000;
 const upload = multer({ storage: multer.memoryStorage() });
 
 const dbx = new Dropbox({
-  accessToken: process.env.DROPBOX_TOKEN,
-  fetch: fetch
+  accessToken: process.env.DROPBOX_TOKEN
 });
 
 /* ===============================
@@ -227,4 +226,5 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log("Server running");
 });
+
 
