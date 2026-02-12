@@ -151,7 +151,10 @@ app.post("/upload-profile", auth, upload.single("image"), async (req, res) => {
       link = { result: existing.result.links[0] };
     }
 
-    const url = link.result.url.replace("?dl=0", "?raw=1");
+    const url = link.result.url
+      .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+      .replace("?dl=0", "");
+
 
     await User.updateOne(
       { username: req.session.user },
@@ -226,5 +229,3 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log("Server running");
 });
-
-
