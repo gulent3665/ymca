@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Setup Profile</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1 class="glow">PROFILE REQUIRED</h1>
+<p>You are missing your profile picture.</p>
+
+<div class="badge-container">
+  <div class="badge-frame">
+    <img src="badge.png" class="frame">
+    <img id="preview" class="preview">
+    <div class="plus">+</div>
+  </div>
+</div>
+
+<input type="file" id="imageInput">
+<button onclick="saveProfile()">Save Profile</button>
+
+<script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css"/>
+
+<script>
+let cropper;
+
+const input = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+
+input.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function() {
+    preview.src = reader.result;
+    cropper = new Cropper(preview, {
+      aspectRatio: 1,
+      viewMode: 1
+    });
+  };
+
+  reader.readAsDataURL(file);
+});
+
+async function saveProfile() {
+  const canvas = cropper.getCroppedCanvas({
+    width: 300,
+    height: 300
+  });
+
+  const blob = await new Promise(resolve =>
+    canvas.toBlob(resolve, "image/png")
+  );
+
+  const formData = new FormData();
+  formData.append("image", blob);
+
+  await fetch("/upload-profile", {
+    method: "POST",
+    body: formData
+  });
+
+  window.location.href = "/chat";
+}
+</script>
+
+</body>
+</html>
