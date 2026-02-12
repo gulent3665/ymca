@@ -8,13 +8,19 @@
 
 <h1 class="glow">RESILIENCE TERMINAL</h1>
 <a href="/logout" style="color:#ff4d4d;">Disconnect</a>
-<input type="file" id="fileInput" />
-<button onclick="uploadImage()">Upload Image</button>
 
 <div class="container">
   <ul id="messages"></ul>
+
   <input id="input" autocomplete="off" placeholder="Type message..." />
   <button onclick="send()">Transmit</button>
+</div>
+
+<!-- PROFILE BADGE POPUP -->
+<div class="popup" id="badgePopup">
+  <div class="popup-content">
+    <img id="popupAvatar" />
+  </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -22,6 +28,8 @@
 const socket = io();
 const input = document.getElementById("input");
 const messages = document.getElementById("messages");
+const popup = document.getElementById("badgePopup");
+const popupAvatar = document.getElementById("popupAvatar");
 
 function send() {
   if (input.value !== "") {
@@ -30,11 +38,10 @@ function send() {
   }
 }
 
-// 🔥 ADD THIS FUNCTION
+/* IMAGE UPLOAD (chat image, not avatar) */
 async function uploadImage() {
   const fileInput = document.getElementById("fileInput");
   const file = fileInput.files[0];
-
   if (!file) return alert("Select a file");
 
   const formData = new FormData();
@@ -46,31 +53,48 @@ async function uploadImage() {
   });
 
   const data = await res.json();
-
   socket.emit("chat message", "[IMAGE]" + data.imageUrl);
 }
 
-// Listen for messages
+/* Open badge popup */
+function openBadge(imageUrl) {
+  popupAvatar.src = imageUrl;
+  popup.style.display = "flex";
+}
+
+/* Close popup */
+popup.addEventListener("click", () => {
+  popup.style.display = "none";
+});
+
+/* Listen for messages */
 socket.on("chat message", (msg) => {
   const li = document.createElement("li");
+
+  // Create clickable username
+  const usernameSpan = document.createElement("span");
+  usernameSpan.textContent = msg.user + " >> ";
+  usernameSpan.style.cursor = "pointer";
+  usernameSpan.style.color = "#ff4d4d";
+
+  if (msg.avatar) {
+    usernameSpan.onclick = () => openBadge(msg.avatar);
+  }
+
+  li.appendChild(usernameSpan);
 
   if (msg.text.startsWith("[IMAGE]")) {
     const img = document.createElement("img");
     img.src = msg.text.replace("[IMAGE]", "");
     img.style.maxWidth = "150px";
-
-    li.textContent = msg.user + " >> ";
     li.appendChild(img);
   } else {
-    li.textContent = msg.user + " >> " + msg.text;
+    li.appendChild(document.createTextNode(msg.text));
   }
 
   messages.appendChild(li);
 });
 </script>
 
-
-
 </body>
 </html>
-
