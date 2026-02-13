@@ -174,8 +174,8 @@ button:hover {
 /* Badge overlay */
 .badge {
   position: absolute;
-  width: 195.3%;
-  height: 195.3%;
+  width: 165%;
+  height: 165%;
 
   left: -215px;
   top: -280px;
