@@ -148,36 +148,39 @@ button:hover {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.85);
-  display: flex;
   justify-content: center;
   align-items: center;
   z-index: 999;
-  padding: 20px; /* prevents edge touching on phones */
+  padding: 20px;
 }
 
-/* Responsive popup content */
 .popup-content {
   position: relative;
-  width: min(90vw, 350px);
+  width: min(90vw, 400px);
   aspect-ratio: 1 / 1;
-  background: black;
-  border: 1px solid #ff1a1a;
-  box-shadow: 0 0 20px #ff0000;
 }
 
-/* Avatar base */
-#popupAvatar {
+/* Avatar positioned using Figma ratios */
+.avatar {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  width: 52.6%;
+  height: 52.6%;
   object-fit: cover;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-80%, -88%);
+  z-index: 1;
 }
 
-/* Badge overlay */
-.popup-content::after {
-  content: "";
+/* Badge frame */
+.badge {
   position: absolute;
   inset: 0;
-  background: url("/badge.png") center/contain no-repeat;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 2;
   pointer-events: none;
 }
