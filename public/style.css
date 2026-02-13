@@ -156,30 +156,30 @@ button:hover {
 
 .popup-content {
   position: relative;
-  width: 500px;
-  height: 500px;
+  width: 512px;
+  height: 512px;
 }
 
-/* Avatar — HARDWIRED FROM FIGMA */
+/* Avatar base */
 .avatar {
   position: absolute;
-  width: 263px;
-  height: 263px;
+  width: 512px;
+  height: 512px;
   object-fit: cover;
-
-  left: 100px;   /* calculated */
-  top: 141px;    /* calculated */
-
+  left: 0;
+  top: 0;
   z-index: 1;
 }
 
-/* Badge frame */
+/* Badge overlay */
 .badge {
   position: absolute;
-  width: 500px;
-  height: 500px;
-  left: 0;
-  top: 0;
+  width: 195.3%;
+  height: 195.3%;
+
+  left: -215px;
+  top: -280px;
+
   object-fit: contain;
   z-index: 2;
   pointer-events: none;
